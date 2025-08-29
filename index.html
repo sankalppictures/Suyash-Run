@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no">
+  <title>No Internet Clone with Custom Character</title>
+  <style>
+    body {
+      margin: 0;
+      background: #fdfdfd;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Scoreboard - top right */
+    .scoreboard {
+      position: fixed;
+      top: 10px;
+      right: 15px;
+      font-size: 20px;
+      font-family: monospace;
+      color: #111;
+      font-weight: bold;
+      z-index: 10;
+    }
+
+    /* Game area */
+    .game {
+      position: relative;
+      width: 100%;
+      height: 50vh;
+      background: #fff;
+      border-bottom: 5px solid #ccc;
+      overflow: hidden;
+    }
+
+    #character {
+      position: absolute;
+      bottom:0;
+      left: 15vw;
+      width: 80px;
+      height: auto;
+    }
+
+    .obstacle {
+      position: absolute;
+      bottom: 0;
+      left: 100%;
+      width: 39px;
+      height: 50px;
+    }
+
+    .cloud {
+      position: absolute;
+      top: 90px;
+      left: 100%;
+      width: 120px;
+      height: auto;
+      opacity: 0.7;
+      animation: moveCloud 5s linear infinite;
+    }
+
+    @keyframes moveCloud {
+      0% { left: 100%; }
+      100% { left: -120px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Scoreboard -->
+  <div class="scoreboard">
+    SCORE: <span id="score">0</span> | HI: <span id="hiscore">0</span>
+  </div>
+
+  <!-- Game Area -->
+  <div class="game" id="game">
+    <img id="character" src="https://i.ibb.co/N6syYKBp/image-removebg-preview.png" alt="character">
+    <img class="obstacle" id="obstacle" src="https://i.ibb.co/tTSKZTnT/images-1-removebg-preview.png" alt="obstacle">
+    <img class="cloud" src="https://i.ibb.co/ccPtdvPn/images-3-removebg-preview.png" alt="cloud">
+  </div>
+
+  <script>
+    let character = document.getElementById("character");
+    let obstacle = document.getElementById("obstacle");
+    let scoreEl = document.getElementById("score");
+    let hiscoreEl = document.getElementById("hiscore");
+
+    let jumping = false;
+    let score = 0;
+    let hiscore = localStorage.getItem("hiscore") || 0;
+    hiscoreEl.innerText = hiscore;
+
+    let obsX = window.innerWidth;
+    let speed = 6; // obstacle speed
+
+    // Jump function
+    function jump() {
+      if (jumping) return;
+      jumping = true;
+      let pos = 0;
+      let up = setInterval(() => {
+        if (pos >= 219) {
+          clearInterval(up);
+          let down = setInterval(() => {
+            if (pos <= 0) {
+              clearInterval(down);
+              jumping = false;
+            }
+            pos -= 10;
+            character.style.bottom = pos + "px";
+          }, 20);
+        }
+        pos += 10;
+        character.style.bottom = pos + "px";
+      }, 20);
+    }
+
+    function resetObstacle() {
+      obsX = window.innerWidth;
+    }
+
+    // Game loop
+    setInterval(() => {
+      // obstacle move
+      obsX -= speed;
+      if (obsX < -60) {
+        resetObstacle();
+        score++;
+        scoreEl.innerText = score;
+        if (score > hiscore) {
+          hiscore = score;
+          localStorage.setItem("hiscore", hiscore);
+          hiscoreEl.innerText = hiscore;
+        }
+      }
+      obstacle.style.left = obsX + "px";
+
+      // Collision detection
+      let charBottom = parseInt(window.getComputedStyle(character).getPropertyValue("bottom"));
+      let charLeft = character.offsetLeft;
+      let charRight = charLeft + character.offsetWidth;
+
+      let obsLeft = obsX;
+      let obsRight = obsX + obstacle.offsetWidth;
+
+      if (charRight > obsLeft && charLeft < obsRight && charBottom < obstacle.offsetHeight) {
+        alert("Game Over! आपका स्कोर: " + score);
+        score = 0;
+        scoreEl.innerText = score;
+        resetObstacle();
+      }
+    }, 30);
+
+    // Controls
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space" || e.code === "ArrowUp") jump();
+    });
+    document.addEventListener("click", jump);
+  </script>
+</body>
+</html>
